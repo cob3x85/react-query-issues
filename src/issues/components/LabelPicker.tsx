@@ -1,33 +1,35 @@
-import { useQuery } from "@tanstack/react-query";
-import { githubApi } from "../../api/githubApi";
-import { Label } from "../interfaces/label";
-export const LabelPicker = () => {
+import { FC } from "react";
+import { useLabels } from "../../hooks/useLabels";
+import { LoadingIcon } from "../../shared/components/LoadingIcon";
 
-  const getLabels = async(): Promise<Label[]> => {
-    const { data } = await githubApi.get<Label[]>('/labels');
-    // const res = await fetch('https://api.github.com/repos/facebook/react/labels');
-    // const data = await res.json();
-    console.log(data);
-    return data;
+
+interface Props {
+  selectedLabels: string[];
+  onLabelChange: (labelName: string) => void;
+}
+export const LabelPicker: FC<Props> = ({selectedLabels, onLabelChange}) => {
+  const labelsQuery = useLabels();
+
+  if (labelsQuery.isLoading) {
+    return (
+      <LoadingIcon />
+    )
   }
-
-  const labelsQuery = useQuery(
-    ['labels'],
-    getLabels,
-    {
-      refetchOnWindowFocus: false
-    }
-  );
-
   return (
-    <div>
-        <span
-            className="badge rounded-pill m-1 label-picker"
-            style={{ border: `1px solid #ffccd3`, color: '#ffccd3' }}
-        >
-            Primary
-        </span>
+    <>
+      {
+        labelsQuery.data?.map(label => (
+          <span
+            className={`badge rounded-pill m-1 label-picker ${selectedLabels.includes(label.name)? 'label-active': ''}`}
+            style={{ border: `1px solid #${label.color}`, color: `#${label.color}` }}
+            onClick={()=> onLabelChange(label.name)}
+          >
+            {label.name}
+          </span>
+        ))
+      }
 
-    </div>
+
+    </>
   )
 }
